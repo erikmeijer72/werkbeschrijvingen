@@ -7,7 +7,6 @@ export const generateSOP = async (
   onChunk: (text: string) => void
 ): Promise<string> => {
   // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-  // Assume this variable is pre-configured, valid, and accessible.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // Modified prompt to explicitly forbid introductory text
