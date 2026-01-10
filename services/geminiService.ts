@@ -6,10 +6,8 @@ export const generateSOP = async (
   mimeType: string, 
   onChunk: (text: string) => void
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing. Please ensure process.env.API_KEY is configured.");
-  }
-
+  // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+  // Assume this variable is pre-configured, valid, and accessible.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // Modified prompt to explicitly forbid introductory text
@@ -34,7 +32,8 @@ export const generateSOP = async (
       config: {
         systemInstruction: SOP_SYSTEM_INSTRUCTION,
         temperature: 0.1,
-        maxOutputTokens: 2048,
+        // The thinking budget is set to 0 to disable thinking for lower latency, 
+        // as per the requirement for basic text tasks or if speed is preferred.
         thinkingConfig: { thinkingBudget: 0 }
       }
     });
