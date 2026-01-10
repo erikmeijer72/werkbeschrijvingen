@@ -1,52 +1,68 @@
 import { GoogleGenAI } from "@google/genai";
 import { SOP_SYSTEM_INSTRUCTION, MODEL_NAME } from '../constants';
 
+// Helper to safely access environment variables across different build tools (Vite, CRA, Next.js)
+const getEnvVar = (key: string): string | undefined => {
+  // 1. Check import.meta.env (Vite standard)
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      // @ts-ignore
+      return import.meta.env[key];
+    }
+  } catch (e) {}
+
+  // 2. Check process.env (Webpack, Next.js, Node)
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch (e) {}
+
+  return undefined;
+};
+
 export const generateSOP = async (
   base64Data: string, 
   mimeType: string, 
   onChunk: (text: string) => void
 ): Promise<string> => {
   
+  // --- Robust API Key Retrieval ---
+  // We explicitly look for VITE_API_KEY as the primary source for Vite apps on Vercel
+  const apiKey = getEnvVar('VITE_API_KEY') || 
+                 getEnvVar('NEXT_PUBLIC_API_KEY') || 
+                 getEnvVar('REACT_APP_API_KEY') || 
+                 getEnvVar('API_KEY');
+
   // --- Runtime Environment Polyfill ---
-  // Ensure global process object exists for the SDK
+  // The SDK requires process.env to exist and often looks for API_KEY there directly.
   if (typeof process === 'undefined') {
     (window as any).process = { env: {} };
   } else if (!process.env) {
     (window as any).process.env = {};
   }
 
-  // --- API Key Discovery ---
-  let resolvedKey = '';
-
-  try {
-    // Explicitly check Vite env var. 
-    // We use direct property access so bundlers can statically replace it.
-    // @ts-ignore
-    if (import.meta.env.VITE_API_KEY) {
-      // @ts-ignore
-      resolvedKey = import.meta.env.VITE_API_KEY;
-    }
-  } catch (e) {
-    // import.meta might not be available in all environments, ignore error
+  // Inject the found key so process.env.API_KEY is available
+  if (apiKey) {
+    process.env.API_KEY = apiKey;
   }
 
-  // Fallback checks for other environments (Next.js, CRA, Node)
-  if (!resolvedKey && process.env.NEXT_PUBLIC_API_KEY) resolvedKey = process.env.NEXT_PUBLIC_API_KEY;
-  if (!resolvedKey && process.env.REACT_APP_API_KEY) resolvedKey = process.env.REACT_APP_API_KEY;
-  if (!resolvedKey && process.env.API_KEY) resolvedKey = process.env.API_KEY;
-
-  // Set the key for the SDK
-  if (resolvedKey) {
-    process.env.API_KEY = resolvedKey;
-  }
-
+  // Debugging: Log status (without revealing full key) if missing
   if (!process.env.API_KEY) {
+    console.error("Debug Info - Environment:", {
+      vite_available: typeof import.meta !== 'undefined' && !!(import.meta as any).env,
+      process_available: typeof process !== 'undefined',
+      found_vite_key: !!getEnvVar('VITE_API_KEY'),
+    });
+    
     throw new Error(
-      "API Key ontbreekt. Controleer of 'VITE_API_KEY' correct is ingesteld in Vercel Environment Variables en of je opnieuw hebt gedeployed."
+      "API Key ontbreekt. Controleer of 'VITE_API_KEY' is ingesteld in Vercel Environment Variables. " +
+      "Belangrijk: Na het toevoegen van de key moet je een 'Redeploy' uitvoeren in Vercel."
     );
   }
 
-  // Initialize SDK with the key from process.env.API_KEY
+  // Initialize SDK using the standard process.env.API_KEY as required
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // Modified prompt to explicitly forbid introductory text
