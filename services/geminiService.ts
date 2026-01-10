@@ -7,64 +7,66 @@ export const generateSOP = async (
   onChunk: (text: string) => void
 ): Promise<string> => {
   
-  // --- 1. ENVIRONMENT POLYFILL ---
-  // The Google SDK and our configuration rules require 'process.env.API_KEY'.
-  // In browser environments (like Vite on Vercel), 'process' is undefined.
-  // We must shim it to prevent crashes and to provide a place to store the key.
+  // --- 1. ROBUST ENVIRONMENT POLYFILL & KEY DISCOVERY ---
+  // We need to robustly find the API key from various potential environment variable locations
+  // and ensure 'process.env.API_KEY' is populated as expected by the Google GenAI SDK conventions.
   
+  let foundKey = '';
+
+  // Check Vite's import.meta.env
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      // @ts-ignore
+      if (import.meta.env.VITE_API_KEY) foundKey = import.meta.env.VITE_API_KEY;
+      // @ts-ignore
+      else if (import.meta.env.API_KEY) foundKey = import.meta.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore errors in environments where import.meta is not supported
+  }
+
+  // Check standard global process.env (Next.js, standard Node, or explicitly replaced globals)
+  if (!foundKey && typeof process !== 'undefined' && process.env) {
+    foundKey = process.env.API_KEY || 
+               process.env.NEXT_PUBLIC_API_KEY || 
+               process.env.REACT_APP_API_KEY || 
+               process.env.GOOGLE_API_KEY || 
+               '';
+  }
+
+  // Polyfill the global process for the SDK if it's completely missing (Browser environment)
   // @ts-ignore
   if (typeof process === 'undefined') {
     // @ts-ignore
     window.process = { env: {} };
   }
   
+  // Ensure process.env exists
   // @ts-ignore
-  if (!process.env) {
+  if (!process.env) { 
     // @ts-ignore
-    process.env = {};
+    process.env = {}; 
   }
-
-  // --- 2. API KEY DISCOVERY ---
-  // We check standard Vite environment variables. 
-  // IMPORTANT: Vite statically replaces 'import.meta.env.VITE_API_KEY' at build time.
-  // We must reference it exactly like that.
   
-  let foundKey = '';
-
-  try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
-      // @ts-ignore
-      foundKey = import.meta.env.VITE_API_KEY;
-    }
-  } catch (e) {
-    // Ignore errors in non-module environments
-  }
-
-  // Fallback: Check if it's already in process.env (e.g. from a different build system)
-  if (!foundKey && process.env.API_KEY) {
-    foundKey = process.env.API_KEY;
-  }
-
-  // --- 3. SET API KEY ---
-  // Ensure the key is available where the SDK expects it (and where strict rules require it).
+  // 2. Set the key back to process.env.API_KEY if we found it elsewhere
   if (foundKey) {
     process.env.API_KEY = foundKey;
   }
 
-  // --- 4. VALIDATION ---
+  // 3. FINAL VALIDATION
   if (!process.env.API_KEY) {
-    console.error("DEBUG: API Key retrieval failed. Checked VITE_API_KEY and process.env.API_KEY.");
+    console.error("DEBUG: Failed to find API Key. Checked VITE_API_KEY, NEXT_PUBLIC_API_KEY, REACT_APP_API_KEY, and process.env.API_KEY.");
     throw new Error(
-      "API Key is missing.\n\n" +
-      "ACTION REQUIRED (Vercel):\n" +
-      "1. Go to your Vercel Project Settings > Environment Variables.\n" +
-      "2. Add a new variable named 'VITE_API_KEY' with your Google AI Studio key.\n" +
-      "3. IMPORTANT: Go to Deployments and click 'Redeploy' for the changes to take effect."
+      "API Key ontbreekt. \n\n" +
+      "Instructie voor Vercel:\n" +
+      "1. Ga naar Settings > Environment Variables.\n" +
+      "2. Voeg 'VITE_API_KEY' toe met je Google AI Studio key.\n" +
+      "3. BELANGRIJK: Ga naar Deployments en klik op 'Redeploy' bij de laatste versie."
     );
   }
 
-  // --- 5. INITIALIZE SDK ---
+  // 4. INITIALIZATION
   // We use process.env.API_KEY as strictly required by the coding guidelines.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -105,9 +107,8 @@ export const generateSOP = async (
   } catch (error) {
     console.error("Gemini API Error:", error);
     if (error instanceof Error) {
-      // Handle standard API errors
       if (error.message.includes('403') || error.message.includes('API key')) {
-         throw new Error("API Key ongeldig of niet gemachtigd. Controleer of VITE_API_KEY correct is in Vercel.");
+         throw new Error("API Key ongeldig of niet gemachtigd. Controleer je VITE_API_KEY in Vercel.");
       }
       if (error.message.includes('429')) {
         throw new Error("Te veel verzoeken. Probeer het later opnieuw.");
