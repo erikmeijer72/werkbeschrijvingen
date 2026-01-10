@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Loader2, Sparkles, AlertTriangle, FileText, Mail, Send } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, FileText, Mail, Send, History, CheckCircle2 } from 'lucide-react';
 import FileUploader from './components/FileUploader';
 import SopDisplay from './components/SopDisplay';
 import { generateSOP } from './services/geminiService';
@@ -47,7 +48,7 @@ function App() {
     } catch (err: any) {
       console.error(err);
       setStatus(FileStatus.ERROR);
-      setError(err.message || "An unexpected error occurred while processing the file.");
+      setError(err.message || "Er is een onverwachte fout opgetreden bij het verwerken.");
     }
   };
 
@@ -64,7 +65,6 @@ function App() {
       setEmailStatus('copied');
       setTimeout(() => setEmailStatus('idle'), 4000);
       
-      // Try to find the title in the markdown result (first line starting with #)
       const lines = result.split('\n');
       const titleLine = lines.find(line => line.trim().startsWith('# '));
       const cleanTitle = titleLine 
@@ -72,12 +72,11 @@ function App() {
         : `Werkbeschrijving - ${new Date().toLocaleDateString('nl-NL')}`;
 
       const subject = encodeURIComponent(cleanTitle);
-      const body = "";
+      const body = encodeURIComponent("Zie de bijgevoegde werkbeschrijving (gekopieerd naar klembord).\n\nMet vriendelijke groet,");
       
       return { subject, body };
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      alert('Kon tekst niet kopiëren naar klembord. Kopieer handmatig.');
       return null;
     }
   };
@@ -85,128 +84,164 @@ function App() {
   const handleSendEmail = async () => {
     const data = await prepareEmailData();
     if (!data) return;
-
     window.location.href = `mailto:${DEFAULT_RECIPIENT}?subject=${data.subject}&body=${data.body}`;
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-12 flex flex-col">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md bg-white/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-blue-200 shadow-lg">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600">
-              Record werkbeschrijvingen
-            </h1>
+            <div>
+              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-none">
+                AutoSOP <span className="text-blue-600">Pro</span>
+              </h1>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">SOP Generator</p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center space-x-4">
+             <div className="flex items-center space-x-1 text-slate-400 text-xs font-medium">
+                <History className="w-3.5 h-3.5" />
+                <span>v1.2.0</span>
+             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-semibold mb-1">Nieuwe Opname</h2>
-              <p className="text-slate-500 text-sm mb-6">Start een opname om direct een werkbeschrijving te genereren.</p>
+            <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Start Opname</h2>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Leg de stappen mondeling uit. Onze AI zet het direct om in een professionele werkbeschrijving volgens de Master Prompt richtlijnen.
+                </p>
+              </div>
               
-              <FileUploader 
-                selectedFile={file}
-                onFileSelect={setFile}
-                onClear={handleClear}
-                disabled={status === FileStatus.PROCESSING || status === FileStatus.READING}
-              />
+              <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100 mb-6">
+                <FileUploader 
+                  selectedFile={file}
+                  onFileSelect={setFile}
+                  onClear={handleClear}
+                  disabled={status === FileStatus.PROCESSING || status === FileStatus.READING}
+                />
+              </div>
 
               {file && (status === FileStatus.IDLE || status === FileStatus.COMPLETE) && (
-                <div className="mt-6">
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-4">
                   <button
                     onClick={handleProcess}
-                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg transform active:scale-[0.98]"
+                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-blue-100 hover:shadow-blue-200 transform active:scale-[0.98]"
                   >
                     <Sparkles className="w-5 h-5" />
-                    <span>{status === FileStatus.COMPLETE ? "Opnieuw genereren" : "Genereer werkbeschrijving"}</span>
+                    <span>{status === FileStatus.COMPLETE ? "Opnieuw genereren" : "Genereer Werkbeschrijving"}</span>
                   </button>
+                  {status === FileStatus.COMPLETE && (
+                    <p className="text-center text-[10px] text-slate-400 font-medium">Klaar! Bekijk het resultaat rechts.</p>
+                  )}
                 </div>
               )}
 
               {(status === FileStatus.READING || (status === FileStatus.PROCESSING && !result)) && (
-                <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center">
-                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
-                  <h3 className="font-medium text-blue-900">
-                    {status === FileStatus.READING ? "Audio verwerken..." : "Schrijven..."}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-8 flex flex-col items-center text-center animate-pulse">
+                  <div className="relative mb-4">
+                    <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                    <Sparkles className="w-4 h-4 text-blue-400 absolute -top-1 -right-1" />
+                  </div>
+                  <h3 className="font-bold text-blue-900 text-lg">
+                    {status === FileStatus.READING ? "Audio laden..." : "SOP Schrijven..."}
                   </h3>
-                  <p className="text-sm text-blue-600 mt-1">
-                    De AI maakt een korte en bondige werkbeschrijving.
+                  <p className="text-sm text-blue-700/70 mt-2 max-w-[200px]">
+                    De AI structureert uw instructies tot een professionele documentatie.
                   </p>
                 </div>
               )}
 
               {error && (
-                <div className="mt-6 bg-red-50 border border-red-100 rounded-xl p-4 flex items-start space-x-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="bg-red-50 border border-red-100 rounded-2xl p-6 flex items-start space-x-4 animate-in shake">
+                  <div className="bg-red-100 p-2 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
                   <div>
-                    <h3 className="font-medium text-red-900 text-sm">Fout bij verwerken</h3>
-                    <p className="text-xs text-red-700 mt-1">{error}</p>
+                    <h3 className="font-bold text-red-900 text-sm">Verwerkingsfout</h3>
+                    <p className="text-xs text-red-700 mt-1 leading-relaxed">{error}</p>
+                    <button onClick={handleProcess} className="text-xs font-bold text-red-600 mt-3 hover:underline">Opnieuw proberen</button>
                   </div>
                 </div>
               )}
-            </div>
+            </section>
+
+            {status === FileStatus.COMPLETE && result && (
+              <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="p-3 bg-indigo-50 rounded-xl">
+                    <Mail className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Distributie</h3>
+                    <p className="text-xs text-slate-500">Klaar om te delen met het team.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Ontvanger</span>
+                        <span className="text-sm font-medium text-slate-700">{DEFAULT_RECIPIENT}</span>
+                     </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleSendEmail}
+                    className={`w-full group flex items-center justify-center space-x-3 py-4 px-6 rounded-2xl transition-all shadow-md active:scale-[0.98] ${
+                      emailStatus === 'copied' 
+                        ? 'bg-green-600 text-white shadow-green-100' 
+                        : 'bg-slate-900 text-white shadow-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    {emailStatus === 'copied' ? <CheckCircle2 className="w-5 h-5" /> : <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
+                    <span className="font-bold">
+                      {emailStatus === 'copied' ? 'Tekst Gekopieerd & Mail Openen' : `Verstuur via Email`}
+                    </span>
+                  </button>
+                </div>
+              </section>
+            )}
           </div>
 
-          <div className="lg:col-span-7 flex flex-col gap-6">
+          <div className="lg:col-span-7 h-full min-h-[600px] lg:sticky lg:top-24">
             {result || status === FileStatus.PROCESSING ? (
-              <>
+              <div className="h-full flex flex-col">
                 <SopDisplay content={result} />
-                
-                {status === FileStatus.COMPLETE && (
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Mail className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-900">Distributie</h3>
-                          <p className="text-xs text-slate-500">Verstuur de werkbeschrijving via e-mail.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <button
-                        onClick={handleSendEmail}
-                        className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all shadow-sm ${
-                          emailStatus === 'copied' 
-                            ? 'bg-green-600 text-white hover:bg-green-700' 
-                            : 'bg-slate-900 text-white hover:bg-slate-800'
-                        }`}
-                      >
-                        <Send className="w-5 h-5" />
-                        <span className="font-medium">
-                          {emailStatus === 'copied' ? 'Tekst Gekopieerd & Mail Openen' : `Mail versturen`}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
+              </div>
             ) : (
-              <div className="h-full min-h-[500px] bg-white rounded-xl shadow-sm border border-slate-200 border-dashed flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="w-8 h-8 text-slate-300" />
+              <div className="h-full bg-white rounded-2xl shadow-sm border border-slate-200 border-dashed flex flex-col items-center justify-center p-12 text-center group">
+                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <FileText className="w-10 h-10 text-slate-300" />
                 </div>
-                <h3 className="text-slate-900 font-medium text-lg">Nog geen werkbeschrijving</h3>
-                <p className="text-slate-500 max-w-sm mt-2">
-                  Record een werkbeschrijving
+                <h3 className="text-slate-900 font-bold text-xl">Wachtend op input</h3>
+                <p className="text-slate-500 max-w-xs mt-3 text-sm leading-relaxed">
+                  Zodra je de opname start en verwerkt, verschijnt hier de professionele werkbeschrijving.
                 </p>
+                <div className="mt-8 flex items-center space-x-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
+                   <div className="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Systeem Standby</span>
+                </div>
               </div>
             )}
           </div>
 
         </div>
       </main>
+      
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em]">
+        © {new Date().getFullYear()} AutoSOP Generator • Powered by Gemini AI
+      </footer>
     </div>
   );
 }
