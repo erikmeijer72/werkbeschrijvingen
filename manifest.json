@@ -1,0 +1,24 @@
+{
+  "name": "Record werkbeschrijvingen",
+  "short_name": "Record SOP",
+  "description": "Automatisch werkbeschrijvingen genereren met stem.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn.jsdelivr.net/npm/lucide-static@0.344.0/icons/file-text.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/npm/lucide-static@0.344.0/icons/file-text.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

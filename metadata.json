@@ -1,0 +1,7 @@
+{
+  "name": "Genereer werkbeschrijvingen",
+  "description": "Automatically converts video and audio demonstrations into professional Standard Operating Procedures (SOPs) in Dutch.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
