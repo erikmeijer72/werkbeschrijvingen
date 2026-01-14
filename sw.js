@@ -2,7 +2,8 @@ const CACHE_NAME = 'sop-app-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/speech2text.png'
 ];
 
 self.addEventListener('install', (event) => {

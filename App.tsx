@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Loader2, Sparkles, AlertTriangle, FileText, Mail, Send, History, CheckCircle2 } from 'lucide-react';
 import FileUploader from './components/FileUploader';
@@ -97,9 +96,8 @@ function App() {
             </div>
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-none">
-                AutoSOP <span className="text-blue-600">Pro</span>
+                Werkbeschrijvingen <span className="text-blue-600">PRO</span>
               </h1>
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">SOP Generator</p>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-4">
@@ -240,7 +238,7 @@ function App() {
       </main>
       
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em]">
-        © {new Date().getFullYear()} AutoSOP Generator • Powered by Gemini AI
+        © {new Date().getFullYear()} Werkbeschrijvingen PRO • Powered by Gemini AI
       </footer>
     </div>
   );
