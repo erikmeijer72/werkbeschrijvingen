@@ -3,6 +3,7 @@
   "short_name": "Record SOP",
   "description": "Automatisch werkbeschrijvingen genereren met stem.",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
@@ -12,13 +13,13 @@
       "src": "/speech2text.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/speech2text.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
