@@ -1,9 +1,9 @@
-const CACHE_NAME = 'sop-app-v3';
+const CACHE_NAME = 'sop-app-v5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/speech2text.png'
+  '/speech2text.png?v=2'
 ];
 
 self.addEventListener('install', (event) => {
